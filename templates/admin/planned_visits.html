@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block head %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.0/font/bootstrap-icons.css">
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="top-nav">
+        <div class="logo-section">
+            <img src="{{ url_for('static', filename='images/refresh_church_primary_full_color.png') }}" alt="Refresh Church" class="brand-logo light-mode" style="width: 180px; height: auto; margin-right: 20px;">
+            <img src="{{ url_for('static', filename='images/refresh_church_primary_white.png') }}" alt="Refresh Church" class="brand-logo dark-mode" style="width: 180px; height: auto; margin-right: 20px;">
+        </div>
+        <div class="nav-links">
+            <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('member.member_list') }}">People</a>
+            <a href="#" class="active">Planned Visits</a>
+            <a href="{{ url_for('admin.email_templates') }}">Email</a>
+            <a href="#">Settings</a>
+            <a href="{{ url_for('admin.logout') }}" class="nav-link">
+                <i class="bi bi-box-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="dashboard-card mb-4">
+            <h5>Recent Registrations</h5>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Visit Date</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Children</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for visitor in visitors %}
+                        <tr>
+                            <td>{{ visitor.visit_date.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ visitor.first_name }} {{ visitor.last_name }}</td>
+                            <td>{{ visitor.email }}</td>
+                            <td>{{ visitor.children|length }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-outline-info me-2" onclick="viewDetails('{{ visitor.id }}')">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="confirmDelete('{{ visitor.id }}', '{{ visitor.first_name }} {{ visitor.last_name }}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Details Modal -->
+<div class="modal fade" id="visitorModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Visitor Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="visitorDetails">
+                Loading...
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the registration for <span id="visitorName"></span>?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteForm" method="POST" style="display: inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all modals
+    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    const visitorModal = new bootstrap.Modal(document.getElementById('visitorModal'));
+
+    // Set up delete confirmation
+    window.confirmDelete = function(visitorId, visitorName) {
+        try {
+            const deleteForm = document.getElementById('deleteForm');
+            const visitorNameSpan = document.getElementById('visitorName');
+            
+            if (!deleteForm || !visitorNameSpan) {
+                throw new Error('Required elements not found');
+            }
+            
+            visitorNameSpan.textContent = visitorName;
+            deleteForm.action = `/admin/visitor/${visitorId}/delete`;
+            deleteModal.show();
+        } catch (error) {
+            console.error('Error showing delete confirmation:', error);
+            alert('An error occurred while trying to show the delete confirmation. Please try again.');
+        }
+    };
+
+    // Set up visitor details view
+    window.viewDetails = async function(visitorId) {
+        const detailsContainer = document.getElementById('visitorDetails');
+        
+        try {
+            const response = await fetch(`/admin/visitor/${visitorId}`);
+            const data = await response.json();
+            
+            if (response.ok) {
+                let detailsHtml = `
+                    <h6>Contact Information</h6>
+                    <p><strong>Name:</strong> ${data.first_name} ${data.last_name}</p>
+                    <p><strong>Email:</strong> ${data.email}</p>
+                    <p><strong>Phone:</strong> ${data.phone}</p>
+                    <p><strong>Visit Date:</strong> ${data.visit_date}</p>
+                `;
+                
+                if (data.children && data.children.length > 0) {
+                    detailsHtml += `
+                        <h6 class="mt-4">Registered Children</h6>
+                        <ul>
+                    `;
+                    data.children.forEach(child => {
+                        detailsHtml += `
+                            <li>
+                                ${child.first_name} ${child.last_name}
+                                <br>
+                                <small>DOB: ${child.date_of_birth}</small>
+                                ${child.special_instructions ? `<br><small>Notes: ${child.special_instructions}</small>` : ''}
+                            </li>
+                        `;
+                    });
+                    detailsHtml += '</ul>';
+                }
+                
+                detailsContainer.innerHTML = detailsHtml;
+                visitorModal.show();
+            } else {
+                throw new Error('Failed to load visitor details');
+            }
+        } catch (error) {
+            console.error('Error loading visitor details:', error);
+            detailsContainer.innerHTML = 'Error loading visitor details.';
+            visitorModal.show();
+        }
+    };
+});
+</script>
+{% endblock %}

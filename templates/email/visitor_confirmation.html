@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>Thank you for planning your visit to Refresh Church!</h2>
+    
+    <p>We're excited to welcome you on {{ visitor.visit_date.strftime('%Y-%m-%d') }}.</p>
+    
+    <p><strong>Service Time:</strong> {{ config.SERVICE_TIME }}</p>
+    <p><strong>Location:</strong> {{ config.CHURCH_ADDRESS }}</p>
+    
+    <p>If you have any questions before your visit, please contact us at {{ config.CHURCH_PHONE }}.</p>
+</body>
+</html>
