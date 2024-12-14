@@ -15,7 +15,7 @@
         <div class="quick-actions mt-4">
             <h5 class="mb-3">Quick Actions</h5>
             <div class="d-grid gap-2">
-                <a href="{{ url_for('member.member_list') }}" class="btn btn-outline-primary">
+                <a href="{{ url_for('member.list') }}" class="btn btn-outline-primary">
                     <i class="bi bi-people"></i> Manage Members
                 </a>
                 <a href="{{ url_for('admin.email_templates') }}" class="btn btn-outline-secondary">
@@ -33,7 +33,7 @@
         <div class="top-nav">
             <div class="nav-links">
                 <a href="#" class="active">Dashboard</a>
-                <a href="{{ url_for('member.member_list') }}">People</a>
+                <a href="{{ url_for('member.list') }}">People</a>
                 <a href="{{ url_for('admin.planned_visits') }}">Planned Visits</a>
                 <a href="{{ url_for('admin.email_templates') }}">Email</a>
                 <a href="#">Settings</a>
