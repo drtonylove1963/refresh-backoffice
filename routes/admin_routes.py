@@ -163,18 +163,13 @@ def preview_template():
         return jsonify({'error': str(e)}), 400
 
 @admin_bp.route('/test')
-@admin_bp.route('/test/')
 @login_required
 def test_page():
-    """Test page to display Breeze API member data"""
-    logger = logging.getLogger(__name__)
+    """Simple test page for system verification"""
     try:
-        logger.info("Loading test page with member data")
-        members = Member.query.filter_by(is_active=True).order_by(Member.first_name).all()
-        if not members:
-            logger.warning("No active members found in database")
-            flash('No active members found. Please add some members first.', 'warning')
-        return render_template('admin/test.html', members=members)
+        logger = logging.getLogger(__name__)
+        logger.info("Loading system test page")
+        return render_template('admin/test.html')
     except Exception as e:
         logger.error(f"Error loading test page: {str(e)}", exc_info=True)
         flash('Error loading test page. Please check the logs for details.', 'danger')

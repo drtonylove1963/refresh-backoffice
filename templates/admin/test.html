@@ -42,42 +42,29 @@
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header">
-                                <h5 class="card-title mb-0">Breeze API Member Data Test</h5>
+                                <h5 class="card-title mb-0">System Test Page</h5>
                             </div>
                             <div class="card-body">
-                                <form id="memberForm" class="mb-4">
-                                    <div class="mb-3">
-                                        <label for="memberSelect" class="form-label">Select Member</label>
-                                        <select class="form-select" id="memberSelect" required>
-                                            <option value="">Choose a member...</option>
-                                            {% for member in members %}
-                                            <option value="{{ member.breeze_id }}">{{ member.full_name }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">
-                                        Fetch Breeze Data
-                                    </button>
-                                </form>
-                                
-                                <div id="apiResponse" class="d-none">
-                                    <h6>API Response:</h6>
-                                    <div class="api-response p-3">
-                                        <h6>API Response Fields:</h6>
-                                        <div class="table-responsive">
-                                            <table class="table table-sm table-hover" id="apiFieldsTable">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Field Name</th>
-                                                        <th>Value</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="responseData">
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i>
+                                    This is a test page for system functionality verification.
                                 </div>
+                                
+                                <h6 class="mt-4">Available Tests:</h6>
+                                <ul class="list-group">
+                                    <li class="list-group-item">
+                                        <i class="bi bi-check-circle text-success"></i>
+                                        Database Connection
+                                    </li>
+                                    <li class="list-group-item">
+                                        <i class="bi bi-check-circle text-success"></i>
+                                        Email Configuration
+                                    </li>
+                                    <li class="list-group-item">
+                                        <i class="bi bi-check-circle text-success"></i>
+                                        Template Rendering
+                                    </li>
+                                </ul>
                             </div>
                         </div>
                     </div>
