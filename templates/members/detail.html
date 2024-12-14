@@ -29,10 +29,9 @@
         <div class="top-nav">
             <div class="nav-links">
                 <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
-                <a href="{{ url_for('member.member_list') }}" class="active">People</a>
+                <a href="{{ url_for('member.list') }}" class="active">People</a>
                 <a href="{{ url_for('admin.planned_visits') }}">Planned Visits</a>
                 <a href="{{ url_for('admin.email_templates') }}">Email</a>
-                <a href="{{ url_for('admin.test_page') }}">Test</a>
                 <a href="#">Settings</a>
             </div>
         </div>
@@ -41,7 +40,7 @@
             <div class="member-detail-header mb-4">
                 <div class="d-flex align-items-center">
                     <a href="{{ url_for('member.list') }}" class="btn btn-link">
-                        <i class="bi bi-arrow-left"></i> Back to Members
+                        <i class="bi bi-arrow-left"></i> Back to List
                     </a>
                     {% if is_admin %}
                     <a href="{{ url_for('member.edit_member', id=member.id) }}" class="btn btn-primary ms-auto">

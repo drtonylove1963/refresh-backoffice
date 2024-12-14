@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, jsonify, request, flash, redirect,
 from flask_login import current_user, login_required
 from models.member import Member, Role
 from services.breeze_service import BreezeAPI
-from app import db
+from extensions import db
 from functools import wraps
 import logging
 
@@ -15,7 +15,7 @@ def admin_required(f):
     def decorated_function(*args, **kwargs):
         if not current_user.role == Role.ADMIN:
             flash('You must be an admin to access this page.', 'error')
-            return redirect(url_for('member.member_list'))
+            return redirect(url_for('member.list'))
         return f(*args, **kwargs)
     return decorated_function
 
@@ -49,7 +49,7 @@ def sync_members():
         logging.error(f"Sync error: {str(e)}")
         flash('Error syncing members with BreezeChMS', 'error')
     
-    return redirect(url_for('member.member_list'))
+    return redirect(url_for('member.list'))
 
 @member_bp.route('/<int:id>')
 def member_detail(id):
@@ -87,7 +87,7 @@ def edit_member(id):
             
             db.session.commit()
             flash('Member updated successfully', 'success')
-            return redirect(url_for('member.member_detail', id=id))
+            return redirect(url_for('member.detail', id=id))
             
         except Exception as e:
             db.session.rollback()

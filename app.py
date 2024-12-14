@@ -5,6 +5,7 @@ from flask import Flask
 from config import Config
 from extensions import db, mail, csrf, login_manager
 from services.breeze_service import BreezeAPI
+from routes.member_routes import member_bp
 
 def create_app():
     # Setup enhanced logging
@@ -32,6 +33,7 @@ def create_app():
     app.static_folder = 'static'
     app.static_url_path = '/static'
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Disable caching during development
+    app.config['TEMPLATES_AUTO_RELOAD'] = True
     app.config.from_object(Config)
 
     # Configure SQLAlchemy
@@ -56,10 +58,10 @@ def create_app():
         from routes import blueprints
         for blueprint in blueprints:
             url_prefix = None
-            if blueprint.name == 'member':
-                url_prefix = '/members'
-            elif blueprint.name == 'admin':
+            if blueprint.name == 'admin':
                 url_prefix = '/admin'
+            elif blueprint.name == 'member':
+                url_prefix = '/member'
             app.register_blueprint(blueprint, url_prefix=url_prefix)
             app.logger.info(f"Registered blueprint: {blueprint.name} with prefix: {url_prefix}")
 

@@ -10,7 +10,7 @@
         <div class="quick-actions mt-4">
             <h5 class="mb-3">Quick Actions</h5>
             <div class="d-grid gap-2">
-                <a href="{{ url_for('member.member_list') }}" class="btn btn-outline-primary">
+                <a href="{{ url_for('member.list') }}" class="btn btn-outline-primary">
                     <i class="bi bi-people"></i> Manage Members
                 </a>
                 <a href="{{ url_for('admin.email_templates') }}" class="btn btn-outline-secondary">
@@ -32,7 +32,6 @@
                 <a href="{{ url_for('member.list') }}">People</a>
                 <a href="{{ url_for('admin.planned_visits') }}">Planned Visits</a>
                 <a href="{{ url_for('admin.email_templates') }}">Email</a>
-                <a href="{{ url_for('admin.test_page') }}" class="active">Test</a>
                 <a href="#">Settings</a>
             </div>
         </div>
@@ -56,14 +55,9 @@
                                             {% endfor %}
                                         </select>
                                     </div>
-                                    <div class="btn-group">
-                                        <button type="submit" class="btn btn-primary">
-                                            Fetch Breeze Data
-                                        </button>
-                                        <button type="button" id="fetchProfileFields" class="btn btn-secondary">
-                                            Fetch Profile Fields
-                                        </button>
-                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        Fetch Breeze Data
+                                    </button>
                                 </form>
                                 
                                 <div id="apiResponse" class="d-none">
@@ -165,26 +159,6 @@ document.getElementById('memberForm').addEventListener('submit', async function(
     }
 });
 
-// Handle profile fields fetch with debouncing
-document.getElementById('fetchProfileFields').addEventListener('click', debounce(async function() {
-    const responseDiv = document.getElementById('apiResponse');
-    const responseData = document.getElementById('responseData');
-    
-    try {
-        const response = await fetch('/admin/breeze-profile-fields', {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json'
-            }
-        });
-        
-        const data = await response.json();
-        responseDiv.classList.remove('d-none');
-        createTableRows(data, responseData);
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error fetching profile fields');
-    }
-}, 500)); // 500ms debounce delay
+
 </script>
 {% endblock %}

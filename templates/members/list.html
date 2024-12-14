@@ -36,7 +36,7 @@
         <div class="top-nav">
             <div class="nav-links">
                 <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
-                <a href="#" class="active">People</a>
+                <a href="{{ url_for('member.list') }}" class="active">People</a>
                 <a href="{{ url_for('admin.planned_visits') }}">Planned Visits</a>
                 <a href="{{ url_for('admin.email_templates') }}">Email</a>
                 <a href="#">Settings</a>
