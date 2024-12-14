@@ -162,18 +162,7 @@ def preview_template():
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
-@admin_bp.route('/test')
-@login_required
-def test_page():
-    """Simple test page for system verification"""
-    try:
-        logger = logging.getLogger(__name__)
-        logger.info("Loading system test page")
-        return render_template('admin/test.html')
-    except Exception as e:
-        logger.error(f"Error loading test page: {str(e)}", exc_info=True)
-        flash('Error loading test page. Please check the logs for details.', 'danger')
-        return redirect(url_for('admin.dashboard'))
+
 
 @admin_bp.route('/breeze-data/<breeze_id>')
 @login_required
