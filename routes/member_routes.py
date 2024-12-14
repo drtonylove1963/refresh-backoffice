@@ -20,8 +20,9 @@ def admin_required(f):
     return decorated_function
 
 @member_bp.route('/')
+@member_bp.route('/list')
 @login_required
-def member_list():
+def list():
     """List all members - accessible to all authenticated users"""
     if not current_user.is_authenticated:
         flash('Please log in to view members.', 'warning')
