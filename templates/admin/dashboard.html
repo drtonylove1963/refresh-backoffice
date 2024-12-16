@@ -1,255 +1,107 @@
 {% extends "base.html" %}
 
-{% block head %}
-    {{ super() }}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-{% endblock %}
+{% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="admin-container">
-    <div class="sidebar">
-        <div class="logo-section mb-4">
-            <img src="{{ url_for('static', filename='images/refresh_church_primary_full_color.png') }}" alt="Refresh Church" class="brand-logo light-mode" style="width: 180px; height: auto;">
-            <img src="{{ url_for('static', filename='images/refresh_church_primary_white.png') }}" alt="Refresh Church" class="brand-logo dark-mode" style="width: 180px; height: auto;">
-        </div>
-        <div class="quick-actions mt-4">
-            <h5 class="mb-3">Quick Actions</h5>
-            <div class="d-grid gap-2">
-                <a href="{{ url_for('member.list') }}" class="btn btn-outline-primary">
-                    <i class="bi bi-people"></i> Manage Members
-                </a>
-                <a href="{{ url_for('admin.email_templates') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-envelope"></i> Email Templates
-                </a>
+<div class="container-fluid p-0">
+    <h1 class="mb-4">Hello admin</h1>
+
+    <!-- Stats Cards Row 1 -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-people text-primary mb-3" style="font-size: 2rem;"></i>
+                    <h2 class="mb-2">{{ total_members }}</h2>
+                    <p class="text-muted mb-0">Total Membership</p>
+                </div>
             </div>
         </div>
-        <div class="mt-auto pt-4">
-            <a href="{{ url_for('admin.logout') }}" class="btn btn-outline-danger w-100">
-                <i class="bi bi-box-arrow-right"></i> Logout
-            </a>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-water text-primary mb-3" style="font-size: 2rem;"></i>
+                    <h2 class="mb-2">{{ baptisms_current_year }}</h2>
+                    <p class="text-muted mb-0">Conversions/Baptisms {{ current_year }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-person-plus text-primary mb-3" style="font-size: 2rem;"></i>
+                    <h2 class="mb-2">{{ new_members_current_year }}</h2>
+                    <p class="text-muted mb-0">New Members {{ current_year }}</p>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="main-wrapper">
-        <div class="top-nav">
-            <div class="nav-links">
-                <a href="#" class="active">Dashboard</a>
-                <a href="{{ url_for('member.list') }}">People</a>
-                <a href="{{ url_for('admin.planned_visits') }}">Planned Visits</a>
-                <a href="{{ url_for('admin.email_templates') }}">Email</a>
-                <a href="#">Settings</a>
-                <a href="{{ url_for('admin.logout') }}" class="nav-link">
-                    <i class="bi bi-box-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-    <div class="main-content">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
 
-        
-
-        <div class="welcome-section">
-            <h1 class="welcome-title">Hello {{ current_user.username }}</h1>
-            <div class="stats-overview">
-                <div class="stat-card">
-                    <i class="bi bi-people"></i>
-                    <h3>{{ membership_total }}</h3>
-                    <p>Total Membership</p>
-                </div>
-                <div class="stat-card">
-                    <i class="bi bi-water"></i>
-                    <h3>{{ baptisms_current_year }}</h3>
-                    <p>Conversions/Baptisms {{ current_year }}</p>
-                </div>
-                <div class="stat-card">
-                    <i class="bi bi-person-plus"></i>
-                    <h3>{{ new_members_current_year }}</h3>
-                    <p>New Members {{ current_year }}</p>
-                </div>
-            </div>
-            <div class="progress-container">
-                <div class="progress-stats">
-                    <div class="progress-stat">
-                        <span class="stat-label">Visitors Y.T.D.</span>
-                        <div class="progress">
-                            <div class="progress-bar bg-dark" role="progressbar" style="width: max(70%, 50px)" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100">70%</div>
-                        </div>
-                    </div>
-                    <div class="progress-stat">
-                        <span class="stat-label">Visitors This Month</span>
-                        <div class="progress">
-                            <div class="progress-bar bg-warning" role="progressbar" style="width: max(10%, 50px)" aria-valuenow="10" aria-valuemin="0" aria-valuemax="100">10%</div>
-                        </div>
-                    </div>
-                    <div class="progress-stat">
-                        <span class="stat-label">Planned Visits Y.T.D.</span>
-                        <div class="progress">
-                            <div class="progress-bar bg-secondary" role="progressbar" style="width: max(15%, 50px)" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">15%</div>
-                        </div>
-                    </div>
-                    <div class="progress-stat">
-                        <span class="stat-label">Planned Visits This Month</span>
-                        <div class="progress">
-                            <div class="progress-bar" role="progressbar" style="width: max(5%, 50px)" aria-valuenow="5" aria-valuemin="0" aria-valuemax="100">5%</div>
-                        </div>
-                    </div>
+    <!-- Stats Cards Row 2 -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar-check text-primary mb-3" style="font-size: 2rem;"></i>
+                    <h2 class="mb-2">{{ upcoming_visits }}</h2>
+                    <p class="text-muted mb-0">Upcoming Visits</p>
                 </div>
             </div>
         </div>
-
-        <div class="dashboard-grid">
-            <div class="progress-section">
-                <div class="dashboard-card">
-                    <h5>Weekly Progress</h5>
-                    <div class="progress-chart">
-                        <canvas id="weeklyProgress"></canvas>
-                    </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-people-fill text-primary mb-3" style="font-size: 2rem;"></i>
+                    <h2 class="mb-2">{{ total_visitors_this_year }}</h2>
+                    <p class="text-muted mb-0">Total Visitors {{ current_year }}</p>
                 </div>
             </div>
-
-            <div class="time-tracker">
-                <div class="dashboard-card">
-                    <h5>Service Schedule</h5>
-                    <div class="schedule-timer">
-                        <div class="timer-circle">
-                            <span class="time">10:30</span>
-                            <span class="label">AM Service</span>
-                        </div>
-                    </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-person-lines-fill text-primary mb-3" style="font-size: 2rem;"></i>
+                    <h2 class="mb-2">{{ total_visitors_this_month }}</h2>
+                    <p class="text-muted mb-0">Visitors This Month</p>
                 </div>
             </div>
-
-            <div class="calendar-section">
-                <div class="dashboard-card">
-                    <h5>Upcoming Events</h5>
-                    <div class="calendar-grid">
-                        <!-- Calendar will be populated via JavaScript -->
-                    </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar2-check text-primary mb-3" style="font-size: 2rem;"></i>
+                    <h2 class="mb-2">{{ planned_visits_this_month }}</h2>
+                    <p class="text-muted mb-0">Planned Visits This Month</p>
                 </div>
             </div>
-
-            </div>
+        </div>
     </div>
-</div>
 
-<!-- Details Modal -->
-<div class="modal fade" id="visitorModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Visitor Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <!-- Service Schedule and Events -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Service Schedule</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center py-4">
+                        <h1 class="display-4 mb-0">10:30</h1>
+                        <p class="text-muted">AM Service</p>
+                    </div>
+                </div>
             </div>
-            <div class="modal-body" id="visitorDetails">
-                Loading...
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Upcoming Events</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-0">No upcoming events</p>
+                </div>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Confirm Delete</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to delete the registration for <span id="visitorName"></span>?</p>
-                <p class="text-danger">This action cannot be undone.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <form id="deleteForm" method="POST" style="display: inline;">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                    <input type="hidden" name="_method" value="DELETE">
-                    <button type="submit" class="btn btn-danger">Delete</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize all modals
-    const deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-    const visitorModal = new bootstrap.Modal(document.getElementById('visitorModal'));
-
-    // Set up delete confirmation
-    window.confirmDelete = function(visitorId, visitorName) {
-        try {
-            const deleteForm = document.getElementById('deleteForm');
-            const visitorNameSpan = document.getElementById('visitorName');
-            
-            if (!deleteForm || !visitorNameSpan) {
-                throw new Error('Required elements not found');
-            }
-            
-            visitorNameSpan.textContent = visitorName;
-            deleteForm.action = `/admin/visitor/${visitorId}/delete`;
-            deleteModal.show();
-        } catch (error) {
-            console.error('Error showing delete confirmation:', error);
-            alert('An error occurred while trying to show the delete confirmation. Please try again.');
-        }
-    };
-
-    // Set up visitor details view
-    window.viewDetails = async function(visitorId) {
-        const detailsContainer = document.getElementById('visitorDetails');
-        
-        try {
-            const response = await fetch(`/admin/visitor/${visitorId}`);
-            const data = await response.json();
-            
-            if (response.ok) {
-                let detailsHtml = `
-                    <h6>Contact Information</h6>
-                    <p><strong>Name:</strong> ${data.first_name} ${data.last_name}</p>
-                    <p><strong>Email:</strong> ${data.email}</p>
-                    <p><strong>Phone:</strong> ${data.phone}</p>
-                    <p><strong>Visit Date:</strong> ${data.visit_date}</p>
-                `;
-                
-                if (data.children && data.children.length > 0) {
-                    detailsHtml += `
-                        <h6 class="mt-4">Registered Children</h6>
-                        <ul>
-                    `;
-                    data.children.forEach(child => {
-                        detailsHtml += `
-                            <li>
-                                ${child.first_name} ${child.last_name}
-                                <br>
-                                <small>DOB: ${child.date_of_birth}</small>
-                                ${child.special_instructions ? `<br><small>Notes: ${child.special_instructions}</small>` : ''}
-                            </li>
-                        `;
-                    });
-                    detailsHtml += '</ul>';
-                }
-                
-                detailsContainer.innerHTML = detailsHtml;
-                visitorModal.show();
-            } else {
-                throw new Error('Failed to load visitor details');
-            }
-        } catch (error) {
-            console.error('Error loading visitor details:', error);
-            detailsContainer.innerHTML = 'Error loading visitor details.';
-            visitorModal.show();
-        }
-    };
-});
-</script>
 {% endblock %}
