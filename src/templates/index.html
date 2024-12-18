@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Refresh Church Visit Planner{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2 text-center">
+            <h1 class="display-4 mb-4">Welcome to Refresh Church Visit Planner</h1>
+            <p class="lead mb-4">Manage and coordinate church visits efficiently</p>
+            
+            <div class="row mt-5">
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Plan a Visit</h5>
+                            <p class="card-text">Schedule a new church visit and manage visitor information.</p>
+                            <a href="{{ url_for('main.visit_form') }}" class="btn btn-primary">Plan Visit</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Admin Dashboard</h5>
+                            <p class="card-text">Access administrative tools and manage church visits.</p>
+                            <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">Go to Dashboard</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

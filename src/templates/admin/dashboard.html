@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Refresh Church Visit Planner{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h1 class="h2 mb-4">Admin Dashboard</h1>
+            
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Recent Visits</h5>
+                            <p class="card-text">View and manage recent church visits</p>
+                            <a href="{{ url_for('admin.visits') }}" class="btn btn-primary">View Visits</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Member Management</h5>
+                            <p class="card-text">Manage church members and their information</p>
+                            <a href="{{ url_for('admin.members') }}" class="btn btn-primary">Manage Members</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">Email Templates</h5>
+                            <p class="card-text">Customize email templates for various communications</p>
+                            <a href="{{ url_for('admin.email_templates') }}" class="btn btn-primary">Edit Templates</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

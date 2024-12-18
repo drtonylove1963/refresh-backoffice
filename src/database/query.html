@@ -1,0 +1,534 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Database Query Interface</h2>
+    <!-- Database Actions -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Database Actions</h5>
+            <div class="btn-group" role="group">
+                {% if 'admins' in valid_tables %}
+                <button type="button" class="btn btn-info me-2" onclick="viewSchema('admins')">View Admin Schema</button>
+                <button type="button" class="btn btn-info me-2" onclick="viewData('admins')">View Admin Data</button>
+                {% endif %}
+                {% if 'members' in valid_tables %}
+                <button type="button" class="btn btn-info me-2" onclick="viewSchema('members')">View Member Schema</button>
+                <button type="button" class="btn btn-info" onclick="viewData('members')">View Member Data</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <!-- Query Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form id="queryForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="queryType">Query Type</label>
+                            <select class="form-control" id="queryType" name="query_type">
+                                <option value="contains">Contains</option>
+                                <option value="exact">Exact Match</option>
+                                <option value="recent">Recent Updates</option>
+                                <option value="role">By Role</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="field">Search Field</label>
+                            <select class="form-control" id="field" name="field">
+                                <option value="all">All Fields</option>
+                                <option value="first_name">First Name</option>
+                                <option value="last_name">Last Name</option>
+                                <option value="email">Email</option>
+                                <option value="phone">Phone</option>
+                                <option value="church_status">Church Status</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="searchTerm">Search Term</label>
+                            <input type="text" class="form-control" id="searchTerm" name="search_term">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="sortBy">Sort By</label>
+                            <select class="form-control" id="sortBy" name="sort_by">
+                                <option value="last_name">Last Name</option>
+                                <option value="first_name">First Name</option>
+                                <option value="email">Email</option>
+                                <option value="updated_at">Last Updated</option>
+                                <option value="created_at">Created Date</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="sortOrder">Sort Order</label>
+                            <select class="form-control" id="sortOrder" name="sort_order">
+                                <option value="asc">Ascending</option>
+                                <option value="desc">Descending</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">Execute Query</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Results Section -->
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Results <span id="resultCount" class="badge bg-secondary"></span></h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="perPage">Records per page:</label>
+                        <select class="form-control" id="perPage" onchange="updatePerPage(this.value)">
+                            <option value="50">50</option>
+                            <option value="100" selected>100</option>
+                            <option value="200">200</option>
+                            <option value="500">500</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div id="paginationInfo" class="text-right mt-2">
+                        Showing page <span id="currentPage">1</span> of <span id="totalPages">1</span>
+                        (<span id="totalRecords">0</span> total records)
+                    </div>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-striped" id="resultsTable">
+                    <thead>
+                        <tr id="headerRow"></tr>
+                    </thead>
+                    <tbody id="resultsBody"></tbody>
+                </table>
+            </div>
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center" id="pagination"></ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<!-- Member Data Modal -->
+<div class="modal fade" id="memberDataModal" tabindex="-1" aria-labelledby="memberDataModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="memberDataModalLabel">Member Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs" id="memberDataTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="database-tab" data-bs-toggle="tab" data-bs-target="#database" type="button" role="tab">Database Data</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="breeze-tab" data-bs-toggle="tab" data-bs-target="#breeze" type="button" role="tab">Breeze API Data</button>
+                    </li>
+                </ul>
+                <div class="tab-content mt-3" id="memberDataTabContent">
+                    <div class="tab-pane fade show active" id="database" role="tabpanel">
+                        <pre id="memberJsonData" style="white-space: pre-wrap;"></pre>
+                    </div>
+                    <div class="tab-pane fade" id="breeze" role="tabpanel">
+                        <pre id="memberBreezeData" style="white-space: pre-wrap;"></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="copyToClipboard()">Copy Current View</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for handling queries -->
+<script>
+let memberDataCache = {};
+let memberDataModal;
+let currentPage = 1;
+let totalPages = 1;
+let perPage = 100;
+let currentTable = '';
+let currentSortBy = 'id';
+let currentSortOrder = 'asc';
+
+// Initialize modal when document is ready
+document.addEventListener('DOMContentLoaded', function() {
+    memberDataModal = new bootstrap.Modal(document.getElementById('memberDataModal'));
+});
+
+// Function to view table schema
+async function viewSchema(tableName) {
+    try {
+        const response = await fetch(`/api/table-schema/${tableName}`);
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        if (data.success) {
+            alert(JSON.stringify(data.schema, null, 2));
+        } else {
+            alert('Error fetching schema: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error fetching schema: ' + error.message);
+    }
+}
+
+// Function to view table data
+async function viewData(tableName) {
+    try {
+        currentTable = tableName;
+        currentPage = 1;
+        await loadData();
+    } catch (error) {
+        console.error('Error in viewData:', error);
+        showError('Failed to load data');
+    }
+}
+
+// Function to load data
+async function loadData() {
+    const loadingDiv = document.getElementById('loading');
+    const resultsDiv = document.getElementById('results');
+    
+    if (loadingDiv) loadingDiv.style.display = 'block';
+    if (resultsDiv) resultsDiv.style.display = 'none';
+
+    try {
+        if (!currentTable) {
+            throw new Error('No table selected');
+        }
+        
+        const response = await fetch(`/api/table-data/${currentTable}?page=${currentPage}&per_page=${perPage}&sort_by=${currentSortBy}&sort_order=${currentSortOrder}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        if (!data) {
+            throw new Error('No data received from server');
+        }
+        
+        if (data.success) {
+            updateTable(data.data);
+            updatePaginationInfo(data.pagination);
+        } else {
+            throw new Error(data.error || 'Failed to load data');
+        }
+    } catch (error) {
+        console.error('Error in loadData:', error);
+        showError(error.message || 'Failed to load data');
+        throw error; // Re-throw to be caught by caller
+    } finally {
+        if (loadingDiv) loadingDiv.style.display = 'none';
+        if (resultsDiv) resultsDiv.style.display = 'block';
+    }
+}
+
+// Function to update table
+function updateTable(data) {
+    const headerRow = document.getElementById('headerRow');
+    const resultsBody = document.getElementById('resultsBody');
+    const resultCount = document.getElementById('resultCount');
+    
+    if (!headerRow || !resultsBody) return;
+    
+    // Clear existing content
+    headerRow.innerHTML = '';
+    resultsBody.innerHTML = '';
+    
+    if (!data || data.length === 0) {
+        showError('No data found');
+        if (resultCount) resultCount.textContent = '0 results';
+        return;
+    }
+    
+    if (resultCount) resultCount.textContent = `${data.length} results`;
+    
+    // Create headers
+    const firstRow = data[0];
+    if (!firstRow) return;
+    
+    const columns = Object.keys(firstRow);
+    if (!columns || columns.length === 0) {
+        showError('Invalid data format');
+        return;
+    }
+    
+    // Create headers
+    columns.forEach(key => {
+        const th = document.createElement('th');
+        th.innerHTML = `
+            <div class="d-flex align-items-center">
+                <span>${key}</span>
+                <span class="ml-2">
+                    <i class="fas fa-sort${currentSortBy === key ? (currentSortOrder === 'asc' ? '-up' : '-down') : ''}" 
+                       style="cursor: pointer;"
+                       onclick="toggleSort('${key}')"></i>
+                </span>
+            </div>`;
+        headerRow.appendChild(th);
+    });
+    
+    // Add data rows
+    data.forEach(row => {
+        const tr = document.createElement('tr');
+        columns.forEach(key => {
+            const td = document.createElement('td');
+            td.textContent = row[key] || '';
+            tr.appendChild(td);
+        });
+        
+        // Add view button if it's the members table
+        if (currentTable === 'members' && row.id) {
+            const td = document.createElement('td');
+            const button = document.createElement('button');
+            button.className = 'btn btn-sm btn-info';
+            button.textContent = 'View';
+            button.onclick = () => showMemberData(row.id);
+            td.appendChild(button);
+            tr.appendChild(td);
+            
+            // Store member data in cache
+            memberDataCache[row.id] = row;
+        }
+        
+        resultsBody.appendChild(tr);
+    });
+}
+
+// Function to toggle sort
+function toggleSort(column) {
+    if (currentSortBy === column) {
+        currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSortBy = column;
+        currentSortOrder = 'asc';
+    }
+    loadData();
+}
+
+// Function to update pagination info
+function updatePaginationInfo(pagination) {
+    if (!pagination) return;
+    
+    currentPage = pagination.page;
+    totalPages = pagination.total_pages;
+    
+    const currentPageSpan = document.getElementById('currentPage');
+    const totalPagesSpan = document.getElementById('totalPages');
+    const totalRecordsSpan = document.getElementById('totalRecords');
+    const paginationElement = document.getElementById('pagination');
+    
+    if (currentPageSpan) currentPageSpan.textContent = currentPage;
+    if (totalPagesSpan) totalPagesSpan.textContent = totalPages;
+    if (totalRecordsSpan) totalRecordsSpan.textContent = pagination.total_items;
+    if (!paginationElement) return;
+    
+    // Clear existing pagination
+    paginationElement.innerHTML = '';
+    
+    // Previous button
+    const prevLi = document.createElement('li');
+    prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+    prevLi.innerHTML = `<a class="page-link" href="#" onclick="event.preventDefault(); goToPage(${currentPage - 1})">Previous</a>`;
+    paginationElement.appendChild(prevLi);
+    
+    // Page numbers
+    for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+        const li = document.createElement('li');
+        li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+        li.innerHTML = `<a class="page-link" href="#" onclick="event.preventDefault(); goToPage(${i})">${i}</a>`;
+        paginationElement.appendChild(li);
+    }
+    
+    // Next button
+    const nextLi = document.createElement('li');
+    nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+    nextLi.innerHTML = `<a class="page-link" href="#" onclick="event.preventDefault(); goToPage(${currentPage + 1})">Next</a>`;
+    paginationElement.appendChild(nextLi);
+}
+
+// Function to go to page
+function goToPage(page) {
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+    loadData();
+}
+
+// Function to update per page
+function updatePerPage(value) {
+    perPage = parseInt(value);
+    currentPage = 1;
+    loadData();
+}
+
+// Function to show error
+function showError(message) {
+    const resultsBody = document.getElementById('resultsBody');
+    if (resultsBody) {
+        resultsBody.innerHTML = `<tr><td colspan="100%" class="text-center text-danger">${message}</td></tr>`;
+    }
+}
+
+// Show member data in modal
+async function showMemberData(breezeId) {
+    try {
+        const response = await fetch(`/api/member/${breezeId}/raw`);
+        const data = await response.json();
+        
+        if (data.success) {
+            const breezeDataElem = document.getElementById('memberBreezeData');
+            const jsonDataElem = document.getElementById('memberJsonData');
+            const modalTitleElem = document.getElementById('memberDataModalLabel');
+            
+            if (breezeDataElem) breezeDataElem.textContent = JSON.stringify(data.member, null, 2);
+            if (modalTitleElem) modalTitleElem.textContent = 'Member Data';
+            
+            if (jsonDataElem && memberDataCache[breezeId]) {
+                jsonDataElem.textContent = JSON.stringify(memberDataCache[breezeId], null, 2);
+            }
+            
+            if (memberDataModal) memberDataModal.show();
+        } else {
+            alert('Error fetching member data: ' + data.error);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error fetching member data: ' + error.message);
+    }
+}
+
+// Copy data to clipboard
+function copyToClipboard() {
+    const activeTab = document.querySelector('.tab-pane.active pre');
+    const jsonData = activeTab.textContent;
+    
+    navigator.clipboard.writeText(jsonData).then(() => {
+        alert('Data copied to clipboard!');
+    }).catch(err => {
+        console.error('Failed to copy text: ', err);
+        alert('Failed to copy to clipboard');
+    });
+}
+
+// Show/hide fields based on query type
+document.getElementById('queryType').addEventListener('change', function() {
+    const searchTermField = document.getElementById('searchTerm');
+    const fieldSelect = document.getElementById('field');
+    
+    if (this.value === 'recent') {
+        searchTermField.type = 'number';
+        searchTermField.value = '30';
+        searchTermField.placeholder = 'Number of days';
+        fieldSelect.disabled = true;
+    } else if (this.value === 'role') {
+        searchTermField.type = 'text';
+        searchTermField.placeholder = 'Enter ADMIN, STAFF, or MEMBER';
+        fieldSelect.disabled = true;
+    } else {
+        searchTermField.type = 'text';
+        searchTermField.placeholder = 'Search term';
+        fieldSelect.disabled = false;
+    }
+});
+
+// Handle form submission
+document.getElementById('queryForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    try {
+        const response = await fetch('/api/query', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Query response:', data);  // Debug log
+        
+        // Clear and update results table
+        const tbody = document.getElementById('resultsBody');
+        tbody.innerHTML = '';
+        
+        if (data.success) {
+            const members = Array.isArray(data.members) ? data.members : [];
+            // Update result count
+            document.getElementById('resultCount').textContent = `${members.length} results`;
+            
+            // Store member data in cache
+            memberDataCache = {};
+            
+            if (members.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="8" class="text-center">No results found</td>';
+                tbody.appendChild(row);
+                return;
+            }
+            
+            for (const member of members) {
+                memberDataCache[member.breeze_id] = member;
+                
+                const row = document.createElement('tr');
+                const cells = `
+                    <td>${member.first_name || ''} ${member.last_name || ''}</td>
+                    <td>${member.email || ''}</td>
+                    <td>${member.phone || ''}</td>
+                    <td>${member.gender_display || ''}</td>
+                    <td>${member.church_status || ''}</td>
+                    <td>${member.role || ''}</td>
+                    <td>${member.updated_at || ''}</td>
+                    <td></td>
+                `;
+                row.innerHTML = cells;
+                
+                // Add view button with proper event handling
+                const buttonCell = row.lastElementChild;
+                buttonCell.appendChild(createViewButton(member.breeze_id));
+                
+                tbody.appendChild(row);
+            }
+        } else {
+            document.getElementById('resultCount').textContent = '0 results';
+            const row = document.createElement('tr');
+            row.innerHTML = `<td colspan="8" class="text-center text-danger">Error: ${data.error || 'Unknown error'}</td>`;
+            tbody.appendChild(row);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('resultCount').textContent = '0 results';
+        const tbody = document.getElementById('resultsBody');
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center text-danger">Error: ${error.message}</td></tr>`;
+    }
+});
+</script>
+{% endblock %}

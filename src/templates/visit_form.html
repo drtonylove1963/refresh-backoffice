@@ -1,0 +1,440 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="form-container">
+    <div class="logo">
+        <img src="{{ url_for('static', filename='images/Refresh Church__R-Icon-Ful Color.png') }}" alt="Refresh Church" class="img-fluid" style="max-width: 75px; height: auto;">
+    </div>
+    
+    <h1>Ready To Plan A Visit?</h1>
+    <p class="text-center mb-4">We can't wait to meet you!</p>
+
+    <form id="visitForm" class="needs-validation" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <!-- Step 1: Name -->
+        <div class="form-step" data-step="1">
+            <h2>Hi there! Can I get your name?</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <input type="text" class="form-control" id="firstName" placeholder="First Name" required>
+                </div>
+                <div class="col-md-6">
+                    <input type="text" class="form-control" id="lastName" placeholder="Last Name" required>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Phone -->
+        <div class="form-step d-none" data-step="2">
+            <h2>What's the best mobile number to reach you at?</h2>
+            <div class="mb-3">
+                <input type="tel" class="form-control" id="phone" data-validate="phone" required>
+            </div>
+        </div>
+
+        <!-- Step 3: Email -->
+        <div class="form-step d-none" data-step="3">
+            <h2>What email address can we use to contact you?</h2>
+            <div class="mb-3">
+                <input type="email" class="form-control" id="email" data-validate="email" required>
+            </div>
+        </div>
+
+        <!-- Step 4: Children Registration -->
+        <div class="form-step d-none" data-step="4">
+            <h2>Want to pre-register any children?</h2>
+            <div id="childrenContainer">
+                <div class="child-entry mb-3">
+                    <h3>Child 1</h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" name="childFirstName[]" placeholder="First Name">
+                        </div>
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" name="childLastName[]" placeholder="Last Name">
+                        </div>
+                        <div class="col-12 mt-2">
+                            <input type="date" class="form-control" name="childDob[]" placeholder="Date of Birth">
+                        </div>
+                        <div class="col-12 mt-2">
+                            <textarea class="form-control" name="specialInstructions[]" placeholder="Special Instructions (e.g. needs supervision, is very shy, doesn't do well in big crowds, etc.)"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn btn-outline-primary mt-3" id="addChildBtn">
+                + Add Another Child
+            </button>
+        </div>
+
+        <!-- Step 5: Visit Date -->
+        <div class="form-step d-none" data-step="5">
+            <h2>What date would you like to schedule your visit?</h2>
+            <div class="mb-3">
+                <input type="date" class="form-control" id="visitDate" data-validate="date" required>
+            </div>
+        </div>
+        
+        <!-- Message Container -->
+        <div id="messageContainer" class="alert d-none mt-3"></div>
+
+        <!-- Navigation -->
+        <div class="form-navigation mt-4">
+            <button type="button" class="btn btn-secondary" id="prevBtn" style="display:none">Back</button>
+            <button type="button" class="btn btn-primary" id="nextBtn">Next</button>
+            <button type="submit" class="btn btn-success" id="submitBtn" style="display:none">Submit</button>
+        </div>
+
+        <!-- Progress indicator -->
+        <div class="progress-dots mt-4">
+            <span class="dot active"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+        </div>
+
+        <div class="form-footer mt-4">
+            <p class="small text-muted">We will not share your contact info.</p>
+            <p class="small text-muted">By clicking submit you agree to receive communications from Refresh Church (frequency varies).</p>
+            <p class="small text-muted">Message and data rates may apply. Text STOP at any time to cancel or text HELP for help.</p>
+            <p class="small text-muted">
+                <a href="/terms">Terms of Use</a> and 
+                <a href="/privacy">Privacy Policy</a>
+            </p>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block styles %}
+<style>
+.form-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+
+.logo {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.progress-dots {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    background: #e9ecef;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+}
+
+.dot.active {
+    background: #0d6efd;
+}
+
+.form-navigation {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.form-navigation button {
+    min-width: 100px;
+}
+
+.child-entry {
+    border: 1px solid #dee2e6;
+    padding: 1rem;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.child-entry h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+.remove-child {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    color: #dc3545;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('visitForm');
+    const steps = document.querySelectorAll('.form-step');
+    const nextBtn = document.getElementById('nextBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const dots = document.querySelectorAll('.dot');
+    const addChildBtn = document.getElementById('addChildBtn');
+    let currentStep = 1;
+    const totalSteps = steps.length;
+
+    // Show initial step
+    showStep(currentStep);
+
+    // Add child button click handler
+    if (addChildBtn) {
+        addChildBtn.addEventListener('click', function() {
+            const childrenContainer = document.getElementById('childrenContainer');
+            const childCount = childrenContainer.children.length + 1;
+            
+            const childEntry = document.createElement('div');
+            childEntry.className = 'child-entry mb-3';
+            childEntry.innerHTML = `
+                <h3>Child ${childCount}</h3>
+                <div class="remove-child" onclick="this.parentElement.remove()">×</div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" name="childFirstName[]" placeholder="First Name">
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text" class="form-control" name="childLastName[]" placeholder="Last Name">
+                    </div>
+                    <div class="col-12 mt-2">
+                        <input type="date" class="form-control" name="childDob[]" placeholder="Date of Birth">
+                    </div>
+                    <div class="col-12 mt-2">
+                        <textarea class="form-control" name="specialInstructions[]" placeholder="Special Instructions"></textarea>
+                    </div>
+                </div>
+            `;
+            
+            childrenContainer.appendChild(childEntry);
+        });
+    }
+
+    // Next button click handler
+    nextBtn.addEventListener('click', async function() {
+        if (await validateStep(currentStep)) {
+            if (currentStep < totalSteps) {
+                await saveStep(currentStep);
+                currentStep++;
+                showStep(currentStep);
+            }
+        }
+    });
+
+    // Previous button click handler
+    prevBtn.addEventListener('click', function() {
+        if (currentStep > 1) {
+            currentStep--;
+            showStep(currentStep);
+        }
+    });
+
+    // Form submit handler
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        if (await validateStep(currentStep)) {
+            await saveStep(currentStep);
+            submitForm();
+        }
+    });
+
+    // Function to show step
+    function showStep(step) {
+        steps.forEach((s, index) => {
+            if (index + 1 === step) {
+                s.classList.remove('d-none');
+            } else {
+                s.classList.add('d-none');
+            }
+        });
+
+        // Update dots
+        dots.forEach((dot, index) => {
+            if (index < step) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+
+        // Update buttons
+        prevBtn.style.display = step === 1 ? 'none' : 'block';
+        if (step === totalSteps) {
+            nextBtn.style.display = 'none';
+            submitBtn.style.display = 'block';
+        } else {
+            nextBtn.style.display = 'block';
+            submitBtn.style.display = 'none';
+        }
+    }
+
+    // Function to validate step
+    async function validateStep(step) {
+        const currentStepEl = document.querySelector(`[data-step="${step}"]`);
+        const inputs = currentStepEl.querySelectorAll('input[required]');
+        let isValid = true;
+
+        inputs.forEach(input => {
+            if (!input.value.trim()) {
+                isValid = false;
+                input.classList.add('is-invalid');
+            } else {
+                input.classList.remove('is-invalid');
+            }
+
+            // Additional validation based on input type
+            if (input.dataset.validate) {
+                switch (input.dataset.validate) {
+                    case 'phone':
+                        if (!validatePhone(input.value)) {
+                            isValid = false;
+                            input.classList.add('is-invalid');
+                        }
+                        break;
+                    case 'email':
+                        if (!validateEmail(input.value)) {
+                            isValid = false;
+                            input.classList.add('is-invalid');
+                        }
+                        break;
+                    case 'date':
+                        if (!validateDate(input.value)) {
+                            isValid = false;
+                            input.classList.add('is-invalid');
+                        }
+                        break;
+                }
+            }
+        });
+
+        return isValid;
+    }
+
+    // Function to save step data
+    async function saveStep(step) {
+        const currentStepEl = document.querySelector(`[data-step="${step}"]`);
+        let stepData = {};
+
+        // Collect data based on step
+        switch (step) {
+            case 1:
+                stepData = {
+                    firstName: document.getElementById('firstName').value,
+                    lastName: document.getElementById('lastName').value
+                };
+                break;
+            case 2:
+                stepData = {
+                    phone: document.getElementById('phone').value
+                };
+                break;
+            case 3:
+                stepData = {
+                    email: document.getElementById('email').value
+                };
+                break;
+            case 4:
+                const children = [];
+                const childEntries = document.querySelectorAll('.child-entry');
+                childEntries.forEach(entry => {
+                    children.push({
+                        firstName: entry.querySelector('[name="childFirstName[]"]').value,
+                        lastName: entry.querySelector('[name="childLastName[]"]').value,
+                        dob: entry.querySelector('[name="childDob[]"]').value,
+                        specialInstructions: entry.querySelector('[name="specialInstructions[]"]').value
+                    });
+                });
+                stepData = { children };
+                break;
+            case 5:
+                stepData = {
+                    visitDate: document.getElementById('visitDate').value
+                };
+                break;
+        }
+
+        try {
+            const response = await fetch('/save_step', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrf_token]').value
+                },
+                body: JSON.stringify({
+                    step: step,
+                    ...stepData
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to save step');
+            }
+        } catch (error) {
+            console.error('Error saving step:', error);
+            showMessage('Error saving your information. Please try again.', 'danger');
+        }
+    }
+
+    // Function to submit form
+    async function submitForm() {
+        try {
+            const response = await fetch('/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrf_token]').value
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                showMessage('Thank you! Your visit has been scheduled.', 'success');
+                setTimeout(() => {
+                    window.location.href = data.redirect || '/';
+                }, 2000);
+            } else {
+                showMessage(data.message || 'Error submitting form. Please try again.', 'danger');
+            }
+        } catch (error) {
+            console.error('Error submitting form:', error);
+            showMessage('Error submitting form. Please try again.', 'danger');
+        }
+    }
+
+    // Validation helper functions
+    function validatePhone(phone) {
+        return /^\d{10}$/.test(phone.replace(/\D/g, ''));
+    }
+
+    function validateEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function validateDate(date) {
+        const selectedDate = new Date(date);
+        const today = new Date();
+        return selectedDate >= today;
+    }
+
+    // Function to show messages
+    function showMessage(message, type) {
+        const messageContainer = document.getElementById('messageContainer');
+        messageContainer.textContent = message;
+        messageContainer.className = `alert alert-${type} mt-3`;
+    }
+});
+</script>
+{% endblock %}

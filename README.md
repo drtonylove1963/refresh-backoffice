@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Church Visitor Management System
 
 A comprehensive church visitor management system designed to streamline administrative processes and enhance visitor engagement through modern web technologies.
@@ -66,6 +65,43 @@ python main.py
 
 The application will be available at `http://localhost:5000`
 
+## Project Structure
+
+```
+refresh-church-visit-planner/
+├── src/                    # Main application code
+    ├── components/         # Reusable components
+        ├── forms/         # Form components
+        └── ui/           # UI elements
+    ├── routes/            # Route handlers
+        ├── admin/        # Admin routes
+        ├── auth/         # Authentication routes
+        └── members/      # Member management routes
+    ├── models/            # Database models
+    ├── services/          # Business logic services
+        ├── auth/         # Authentication services
+        └── member/       # Member services
+    ├── utils/             # Helper functions
+        ├── db/           # Database utilities
+        ├── auth/         # Authentication utilities
+        └── helpers/      # General helpers
+    ├── lib/               # Shared libraries
+    ├── static/            # Static assets
+        ├── css/          # Stylesheets
+        ├── js/           # JavaScript files
+        └── images/       # Image assets
+    └── templates/         # HTML templates
+├── scripts/              # Utility scripts
+    ├── db/              # Database management
+    └── member/          # Member management
+├── tests/                # Test files
+    ├── unit/            # Unit tests
+    └── integration/     # Integration tests
+├── config/              # Configuration files
+├── migrations/          # Database migrations
+└── instance/            # Instance-specific files
+```
+
 ## Contributing
 
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
@@ -73,6 +109,3 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-=======
-# refreshkc
->>>>>>> 3f926398aa9a5fbfe6cca09558d72b6b72215da1

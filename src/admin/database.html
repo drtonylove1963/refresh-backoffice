@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Database Management{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Database Management</h2>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Table Name</th>
+                    <th>Record Count</th>
+                    <th>Column Count</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for table in tables %}
+                <tr>
+                    <td>{{ table.name }}</td>
+                    <td>{{ table.record_count }}</td>
+                    <td>{{ table.columns }}</td>
+                    <td>
+                        <button class="btn btn-info btn-sm me-2" onclick="viewSchema('{{ table.name }}')">
+                            View Schema
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="viewData('{{ table.name }}')">
+                            View Data
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Schema Modal -->
+<div class="modal fade" id="schemaModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Table Schema</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Column Name</th>
+                                <th>Type</th>
+                                <th>Nullable</th>
+                                <th>Default</th>
+                            </tr>
+                        </thead>
+                        <tbody id="schemaTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Data Modal -->
+<div class="modal fade" id="dataModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Table Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead id="dataTableHead"></thead>
+                        <tbody id="dataTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function viewSchema(tableName) {
+    fetch(`/admin/api/table-schema/${tableName}`)
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                throw new Error(data.error || 'Failed to fetch schema');
+            }
+            
+            const tbody = document.getElementById('schemaTableBody');
+            tbody.innerHTML = '';
+            
+            data.schema.columns.forEach(column => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${column.name}</td>
+                    <td>${column.type}</td>
+                    <td>${column.nullable ? 'Yes' : 'No'}</td>
+                    <td>${column.default || ''}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            new bootstrap.Modal(document.getElementById('schemaModal')).show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error fetching schema information: ' + error.message);
+        });
+}
+
+function viewData(tableName) {
+    fetch(`/admin/api/table-data/${tableName}`)
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                throw new Error(data.error || 'Failed to fetch data');
+            }
+            
+            if (!data.columns || !data.data) {
+                throw new Error('Invalid response format from server');
+            }
+            
+            const thead = document.getElementById('dataTableHead');
+            const tbody = document.getElementById('dataTableBody');
+            
+            // Clear previous content
+            thead.innerHTML = '';
+            tbody.innerHTML = '';
+            
+            // Add headers
+            const headerRow = document.createElement('tr');
+            data.columns.forEach(column => {
+                const th = document.createElement('th');
+                th.textContent = column;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            
+            // Add data rows
+            data.data.forEach(row => {
+                const tr = document.createElement('tr');
+                data.columns.forEach(column => {
+                    const td = document.createElement('td');
+                    td.textContent = row[column] !== null ? row[column] : '';
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            
+            new bootstrap.Modal(document.getElementById('dataModal')).show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error fetching table data: ' + error.message);
+        });
+}
+</script>
+{% endblock %}

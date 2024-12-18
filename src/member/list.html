@@ -1,0 +1,390 @@
+{% extends "base.html" %}
+
+{% block title %}Church Members{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">People</h1>
+        <div class="d-flex gap-2">
+            {% if is_admin %}
+            <button id="syncButton" class="btn btn-outline-primary" onclick="syncMembers()">
+                <i class="bi bi-arrow-repeat"></i> Sync with Breeze
+            </button>
+            {% endif %}
+            <button class="btn btn-primary">
+                <i class="bi bi-plus"></i> Add Person
+            </button>
+        </div>
+    </div>
+
+    <div id="syncProgress" class="progress mb-3" style="display: none;">
+        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex gap-3">
+                <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#filterModal">
+                    <i class="bi bi-sliders"></i> Filters
+                </button>
+                <div class="flex-grow-1">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                        <input type="text" class="form-control border-start-0" id="searchInput" 
+                               placeholder="Search by name, mobile phone number, email address">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="selectAll">
+                        <label class="form-check-label" for="selectAll">Select all <span id="visibleCount">{{ total_members }}</span> people</label>
+                    </div>
+                    <div class="dropdown">
+                        <button class="btn btn-link text-decoration-none dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown">
+                            Last Name A-Z
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item sort-option" href="#" data-sort="last_name_asc">Last Name A-Z</a></li>
+                            <li><a class="dropdown-item sort-option" href="#" data-sort="last_name_desc">Last Name Z-A</a></li>
+                            <li><a class="dropdown-item sort-option" href="#" data-sort="first_name_asc">First Name A-Z</a></li>
+                            <li><a class="dropdown-item sort-option" href="#" data-sort="first_name_desc">First Name Z-A</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-outline-primary d-flex align-items-center gap-2">
+                        <i class="bi bi-envelope"></i>
+                        Email
+                    </button>
+                    <button class="btn btn-outline-primary d-flex align-items-center gap-2">
+                        <i class="bi bi-chat"></i>
+                        Text
+                    </button>
+                    <button class="btn btn-outline-primary d-flex align-items-center gap-2">
+                        <i class="bi bi-download"></i>
+                        Export
+                    </button>
+                    <button class="btn btn-outline-primary d-flex align-items-center gap-2">
+                        <i class="bi bi-tag"></i>
+                        Assign to Tags
+                    </button>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary dropdown-toggle d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown">
+                            More Actions
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="#">
+                                    <i class="bi bi-tag"></i>
+                                    Remove From Tags
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="#">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                    Update
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="#">
+                                    <i class="bi bi-archive"></i>
+                                    Archive
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" href="#">
+                                    <i class="bi bi-trash"></i>
+                                    Delete
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <tbody id="memberTableBody">
+                        {% for member in members %}
+                        <tr class="member-row" data-status="{{ member.status }}" data-role="{{ member.role }}">
+                            <td style="width: 40px;">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input member-checkbox" value="{{ member.id }}">
+                                </div>
+                            </td>
+                            <td style="width: 50px;">
+                                {% if member.photo_url %}
+                                <img src="{{ member.photo_url }}" class="rounded-circle" width="40" height="40" alt="">
+                                {% else %}
+                                <div class="rounded-circle bg-light d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                    <i class="bi bi-person text-secondary"></i>
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td class="member-name">
+                                <a href="{{ url_for('admin.member_detail', id=member.id) }}" class="text-decoration-none">
+                                    {{ member.last_name }}, {{ member.first_name }}
+                                </a>
+                            </td>
+                            <td class="member-email">{{ member.email or '' }}</td>
+                            <td class="member-phone">{{ member.phone or '' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Modal -->
+<div class="modal fade" id="filterModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Filter People</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Status</label>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input filter-status" id="filterActive" value="active" checked>
+                        <label class="form-check-label" for="filterActive">Active</label>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input filter-status" id="filterInactive" value="inactive">
+                        <label class="form-check-label" for="filterInactive">Inactive</label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Role</label>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input filter-role" id="filterMember" value="member" checked>
+                        <label class="form-check-label" for="filterMember">Member</label>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input filter-role" id="filterStaff" value="staff">
+                        <label class="form-check-label" for="filterStaff">Staff</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="applyFilters">Apply Filters</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const memberCheckboxes = document.querySelectorAll('.member-checkbox');
+    const searchInput = document.getElementById('searchInput');
+    const memberRows = document.querySelectorAll('.member-row');
+    const visibleCountSpan = document.getElementById('visibleCount');
+    let currentSort = 'last_name_asc';
+
+    // Function to update visible count
+    function updateVisibleCount() {
+        const visibleRows = Array.from(memberRows).filter(row => row.style.display !== 'none').length;
+        visibleCountSpan.textContent = visibleRows;
+        
+        // Update select all checkbox state based on visible rows
+        const visibleCheckboxes = Array.from(memberCheckboxes)
+            .filter(cb => cb.closest('tr').style.display !== 'none');
+        const allVisibleChecked = visibleCheckboxes.every(cb => cb.checked);
+        const someVisibleChecked = visibleCheckboxes.some(cb => cb.checked);
+        
+        selectAllCheckbox.checked = allVisibleChecked && visibleCheckboxes.length > 0;
+        selectAllCheckbox.indeterminate = someVisibleChecked && !allVisibleChecked;
+    }
+
+    // Select All functionality
+    selectAllCheckbox.addEventListener('change', function() {
+        const isChecked = this.checked;
+        memberCheckboxes.forEach(checkbox => {
+            if (checkbox.closest('tr').style.display !== 'none') {
+                checkbox.checked = isChecked;
+            }
+        });
+    });
+
+    // Update select all checkbox when individual checkboxes change
+    memberCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const visibleCheckboxes = Array.from(memberCheckboxes)
+                .filter(cb => cb.closest('tr').style.display !== 'none');
+            const allChecked = visibleCheckboxes.every(cb => cb.checked);
+            const someChecked = visibleCheckboxes.some(cb => cb.checked);
+            
+            selectAllCheckbox.checked = allChecked;
+            selectAllCheckbox.indeterminate = someChecked && !allChecked;
+        });
+    });
+
+    // Search functionality
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        memberRows.forEach(row => {
+            const name = row.querySelector('.member-name').textContent.toLowerCase();
+            const email = row.querySelector('.member-email').textContent.toLowerCase();
+            const phone = row.querySelector('.member-phone').textContent.toLowerCase();
+            
+            if (name.includes(searchTerm) || email.includes(searchTerm) || phone.includes(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        updateVisibleCount();
+    });
+
+    // Sorting functionality
+    document.querySelectorAll('.sort-option').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            const sortType = this.dataset.sort;
+            currentSort = sortType;
+            sortMembers(sortType);
+            document.getElementById('sortDropdown').textContent = this.textContent;
+        });
+    });
+
+    function sortMembers(sortType) {
+        const tbody = document.getElementById('memberTableBody');
+        const rows = Array.from(tbody.getElementsByClassName('member-row'));
+
+        rows.sort((a, b) => {
+            const nameA = a.querySelector('.member-name').textContent.trim();
+            const nameB = b.querySelector('.member-name').textContent.trim();
+
+            if (sortType === 'last_name_asc') return nameA.localeCompare(nameB);
+            if (sortType === 'last_name_desc') return nameB.localeCompare(nameA);
+            if (sortType === 'first_name_asc') {
+                const firstNameA = nameA.split(',')[1].trim();
+                const firstNameB = nameB.split(',')[1].trim();
+                return firstNameA.localeCompare(firstNameB);
+            }
+            if (sortType === 'first_name_desc') {
+                const firstNameA = nameA.split(',')[1].trim();
+                const firstNameB = nameB.split(',')[1].trim();
+                return firstNameB.localeCompare(firstNameA);
+            }
+        });
+
+        rows.forEach(row => tbody.appendChild(row));
+        updateVisibleCount();
+    }
+
+    // Filter functionality
+    document.getElementById('applyFilters').addEventListener('click', function() {
+        const selectedStatuses = Array.from(document.querySelectorAll('.filter-status:checked'))
+            .map(cb => cb.value);
+        const selectedRoles = Array.from(document.querySelectorAll('.filter-role:checked'))
+            .map(cb => cb.value);
+
+        memberRows.forEach(row => {
+            const status = row.dataset.status;
+            const role = row.dataset.role;
+            const statusMatch = selectedStatuses.length === 0 || selectedStatuses.includes(status);
+            const roleMatch = selectedRoles.length === 0 || selectedRoles.includes(role);
+
+            row.style.display = statusMatch && roleMatch ? '' : 'none';
+        });
+
+        updateVisibleCount();
+        bootstrap.Modal.getInstance(document.getElementById('filterModal')).hide();
+    });
+});
+
+function syncMembers() {
+    const syncButton = document.getElementById('syncButton');
+    const progressBar = document.getElementById('syncProgress');
+    const progressBarInner = progressBar.querySelector('.progress-bar');
+    
+    // Disable button and show progress
+    syncButton.disabled = true;
+    progressBar.style.display = 'block';
+    progressBarInner.style.width = '0%';
+    progressBarInner.setAttribute('aria-valuenow', 0);
+    
+    // Start progress animation
+    let progress = 0;
+    const progressInterval = setInterval(() => {
+        if (progress < 90) {
+            progress += 5;
+            progressBarInner.style.width = `${progress}%`;
+            progressBarInner.setAttribute('aria-valuenow', progress);
+        }
+    }, 200);
+    
+    // Make the sync request
+    fetch('/admin/members/sync', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Complete the progress bar
+        clearInterval(progressInterval);
+        progressBarInner.style.width = '100%';
+        progressBarInner.setAttribute('aria-valuenow', 100);
+        
+        // Show success message
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-success alert-dismissible fade show';
+        alertDiv.innerHTML = `
+            <strong>Success!</strong> Members synced successfully.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        progressBar.parentNode.insertBefore(alertDiv, progressBar.nextSibling);
+        
+        // Hide progress and enable button after a short delay
+        setTimeout(() => {
+            progressBar.style.display = 'none';
+            syncButton.disabled = false;
+            window.location.reload();
+        }, 1000);
+    })
+    .catch(error => {
+        clearInterval(progressInterval);
+        progressBarInner.style.width = '0%';
+        progressBarInner.setAttribute('aria-valuenow', 0);
+        progressBar.style.display = 'none';
+        syncButton.disabled = false;
+        
+        // Show error message
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+        alertDiv.innerHTML = `
+            <strong>Error!</strong> Failed to sync members: ${error.message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        progressBar.parentNode.insertBefore(alertDiv, progressBar.nextSibling);
+    });
+}
+</script>
+{% endblock %}

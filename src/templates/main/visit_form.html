@@ -1,0 +1,407 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="form-container">
+    <div class="logo">
+        <img src="{{ url_for('static', filename='images/Refresh Church__R-Icon-Ful Color.png') }}" alt="Refresh Church" class="img-fluid" style="max-width: 75px; height: auto;">
+    </div>
+    
+    <h1>Ready To Plan A Visit?</h1>
+    <p class="text-center mb-4">We can't wait to meet you!</p>
+
+    <form id="visitForm" class="needs-validation" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <!-- Step 1: Name -->
+        <div class="form-step" data-step="1">
+            <h2>Hi there! Can I get your name?</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <input type="text" class="form-control" id="firstName" placeholder="First Name" required>
+                </div>
+                <div class="col-md-6">
+                    <input type="text" class="form-control" id="lastName" placeholder="Last Name" required>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Phone -->
+        <div class="form-step d-none" data-step="2">
+            <h2>What's the best mobile number to reach you at?</h2>
+            <div class="mb-3">
+                <input type="tel" class="form-control" id="phone" data-validate="phone" required>
+            </div>
+        </div>
+
+        <!-- Step 3: Email -->
+        <div class="form-step d-none" data-step="3">
+            <h2>What email address can we use to contact you?</h2>
+            <div class="mb-3">
+                <input type="email" class="form-control" id="email" data-validate="email" required>
+            </div>
+        </div>
+
+        <!-- Step 4: Children Registration -->
+        <div class="form-step d-none" data-step="4">
+            <h2>Want to pre-register any children?</h2>
+            <div id="childrenContainer">
+                <div class="child-entry mb-3">
+                    <h3>Child 1</h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" name="childFirstName[]" placeholder="First Name">
+                        </div>
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" name="childLastName[]" placeholder="Last Name">
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-6">
+                            <select class="form-control" name="childGrade[]">
+                                <option value="">Select Grade</option>
+                                <option value="Nursery">Nursery (0-2 years)</option>
+                                <option value="Preschool">Preschool (3-5 years)</option>
+                                <option value="K">Kindergarten</option>
+                                <option value="1">1st Grade</option>
+                                <option value="2">2nd Grade</option>
+                                <option value="3">3rd Grade</option>
+                                <option value="4">4th Grade</option>
+                                <option value="5">5th Grade</option>
+                                <option value="6">6th Grade</option>
+                                <option value="7">7th Grade</option>
+                                <option value="8">8th Grade</option>
+                                <option value="9">9th Grade</option>
+                                <option value="10">10th Grade</option>
+                                <option value="11">11th Grade</option>
+                                <option value="12">12th Grade</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn btn-outline-primary mt-3" onclick="addChild()">+ Add Another Child</button>
+        </div>
+
+        <!-- Step 5: Visit Date -->
+        <div class="form-step d-none" data-step="5">
+            <h2>When would you like to visit?</h2>
+            <div class="mb-3">
+                <input type="date" class="form-control" id="visitDate" data-validate="date" required>
+            </div>
+            <div class="mb-3">
+                <select class="form-control" id="serviceTime" required>
+                    <option value="">Select Service Time</option>
+                    <option value="9:00 AM">9:00 AM</option>
+                    <option value="10:45 AM">10:45 AM</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="form-navigation mt-4">
+            <button type="button" class="btn btn-secondary" onclick="prevStep()" id="prevButton" style="display: none;">Previous</button>
+            <button type="button" class="btn btn-primary" onclick="nextStep()" id="nextButton">Next</button>
+            <button type="submit" class="btn btn-success" id="submitButton" style="display: none;">Submit</button>
+        </div>
+    </form>
+</div>
+
+<style>
+.form-container {
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+}
+
+.logo {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: #444;
+}
+
+.form-step {
+    margin-bottom: 1.5rem;
+}
+
+.form-navigation {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+}
+
+.child-entry {
+    border: 1px solid #ddd;
+    padding: 1rem;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+}
+
+.child-entry h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #555;
+}
+
+.alert {
+    margin-bottom: 1rem;
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+}
+
+.invalid-feedback {
+    display: block;
+    color: #dc3545;
+}
+</style>
+
+<script>
+let currentStep = 1;
+const totalSteps = 5;
+
+function showStep(step) {
+    document.querySelectorAll('.form-step').forEach(el => el.classList.add('d-none'));
+    document.querySelector(`[data-step="${step}"]`).classList.remove('d-none');
+    
+    // Update navigation buttons
+    const prevButton = document.getElementById('prevButton');
+    const nextButton = document.getElementById('nextButton');
+    const submitButton = document.getElementById('submitButton');
+    
+    prevButton.style.display = step === 1 ? 'none' : 'block';
+    nextButton.style.display = step === totalSteps ? 'none' : 'block';
+    submitButton.style.display = step === totalSteps ? 'block' : 'none';
+}
+
+function validateStep(step) {
+    const stepElement = document.querySelector(`[data-step="${step}"]`);
+    let isValid = true;
+    
+    // Clear previous validation messages
+    stepElement.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+    stepElement.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+    
+    // Validate required fields
+    stepElement.querySelectorAll('[required]').forEach(input => {
+        if (!input.value.trim()) {
+            isValid = false;
+            input.classList.add('is-invalid');
+            const feedback = document.createElement('div');
+            feedback.className = 'invalid-feedback';
+            feedback.textContent = 'This field is required';
+            input.parentNode.appendChild(feedback);
+        }
+    });
+    
+    // Validate special fields
+    stepElement.querySelectorAll('[data-validate]').forEach(input => {
+        if (input.value.trim()) {
+            const validationType = input.getAttribute('data-validate');
+            let isValidField = true;
+            
+            switch(validationType) {
+                case 'phone':
+                    isValidField = validatePhone(input.value);
+                    break;
+                case 'email':
+                    isValidField = validateEmail(input.value);
+                    break;
+                case 'date':
+                    isValidField = validateDate(input.value);
+                    break;
+            }
+            
+            if (!isValidField) {
+                isValid = false;
+                input.classList.add('is-invalid');
+                const feedback = document.createElement('div');
+                feedback.className = 'invalid-feedback';
+                feedback.textContent = `Please enter a valid ${validationType}`;
+                input.parentNode.appendChild(feedback);
+            }
+        }
+    });
+    
+    return isValid;
+}
+
+function saveStep(step) {
+    const data = {};
+    const stepElement = document.querySelector(`[data-step="${step}"]`);
+    
+    switch(step) {
+        case 1:
+            data.firstName = document.getElementById('firstName').value;
+            data.lastName = document.getElementById('lastName').value;
+            break;
+        case 2:
+            data.phone = document.getElementById('phone').value;
+            break;
+        case 3:
+            data.email = document.getElementById('email').value;
+            break;
+        case 4:
+            data.children = [];
+            const childEntries = document.querySelectorAll('.child-entry');
+            childEntries.forEach(entry => {
+                const child = {
+                    firstName: entry.querySelector('[name="childFirstName[]"]').value,
+                    lastName: entry.querySelector('[name="childLastName[]"]').value,
+                    grade: entry.querySelector('[name="childGrade[]"]').value
+                };
+                if (child.firstName || child.lastName || child.grade) {
+                    data.children.push(child);
+                }
+            });
+            break;
+        case 5:
+            data.visitDate = document.getElementById('visitDate').value;
+            data.serviceTime = document.getElementById('serviceTime').value;
+            break;
+    }
+    
+    return data;
+}
+
+function submitForm() {
+    if (!validateStep(currentStep)) return;
+    
+    const formData = {
+        ...saveStep(1),
+        ...saveStep(2),
+        ...saveStep(3),
+        ...saveStep(4),
+        ...saveStep(5)
+    };
+    
+    // Send form data to server
+    fetch('/submit-visit', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name="csrf_token"]').value
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage('Thank you for planning your visit! We will be in touch soon.', 'success');
+            document.getElementById('visitForm').reset();
+            currentStep = 1;
+            showStep(1);
+        } else {
+            showMessage('There was an error submitting your form. Please try again.', 'error');
+        }
+    })
+    .catch(error => {
+        showMessage('There was an error submitting your form. Please try again.', 'error');
+    });
+}
+
+// Validation helper functions
+function validatePhone(phone) {
+    return /^\d{10}$/.test(phone.replace(/\D/g, ''));
+}
+
+function validateEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function validateDate(date) {
+    const selectedDate = new Date(date);
+    const today = new Date();
+    return selectedDate >= today;
+}
+
+function showMessage(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} mt-3`;
+    alertDiv.textContent = message;
+    document.querySelector('.form-container').insertBefore(alertDiv, document.getElementById('visitForm'));
+    setTimeout(() => alertDiv.remove(), 5000);
+}
+
+function addChild() {
+    const container = document.getElementById('childrenContainer');
+    const childCount = container.children.length + 1;
+    
+    const childEntry = document.createElement('div');
+    childEntry.className = 'child-entry mb-3';
+    childEntry.innerHTML = `
+        <h3>Child ${childCount}</h3>
+        <div class="row">
+            <div class="col-md-6">
+                <input type="text" class="form-control" name="childFirstName[]" placeholder="First Name">
+            </div>
+            <div class="col-md-6">
+                <input type="text" class="form-control" name="childLastName[]" placeholder="Last Name">
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-6">
+                <select class="form-control" name="childGrade[]">
+                    <option value="">Select Grade</option>
+                    <option value="Nursery">Nursery (0-2 years)</option>
+                    <option value="Preschool">Preschool (3-5 years)</option>
+                    <option value="K">Kindergarten</option>
+                    <option value="1">1st Grade</option>
+                    <option value="2">2nd Grade</option>
+                    <option value="3">3rd Grade</option>
+                    <option value="4">4th Grade</option>
+                    <option value="5">5th Grade</option>
+                    <option value="6">6th Grade</option>
+                    <option value="7">7th Grade</option>
+                    <option value="8">8th Grade</option>
+                    <option value="9">9th Grade</option>
+                    <option value="10">10th Grade</option>
+                    <option value="11">11th Grade</option>
+                    <option value="12">12th Grade</option>
+                </select>
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(childEntry);
+}
+
+function nextStep() {
+    if (validateStep(currentStep)) {
+        saveStep(currentStep);
+        currentStep++;
+        showStep(currentStep);
+    }
+}
+
+function prevStep() {
+    if (currentStep > 1) {
+        currentStep--;
+        showStep(currentStep);
+    }
+}
+
+// Initialize form
+document.addEventListener('DOMContentLoaded', () => {
+    showStep(1);
+    
+    document.getElementById('visitForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        submitForm();
+    });
+});
+</script>
+{% endblock %}

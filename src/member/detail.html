@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}Member Details{% endblock %}
+{% block page_title %}Member Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex align-items-center justify-content-between gap-2 mb-4">
+        <a href="{{ url_for('admin.members') }}" class="text-decoration-none">
+            <i class="bi bi-arrow-left"></i>
+            Back to Members
+        </a>
+        {% if is_admin %}
+        <button class="btn btn-outline-primary" onclick="syncMember('{{ member.id }}')">
+            <i class="bi bi-arrow-repeat"></i>
+            Sync Member
+        </button>
+        {% endif %}
+    </div>
+
+    <div class="row">
+        <!-- Left Sidebar -->
+        <div class="col-md-2">
+            <div class="list-group">
+                <a href="#" class="list-group-item list-group-item-action active">
+                    <i class="bi bi-person-lines-fill"></i> Details
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="bi bi-tags"></i> Tags
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="bi bi-calendar-check"></i> Attendance
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="bi bi-gift"></i> Giving
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <i class="bi bi-journal-text"></i> Notes
+                </a>
+            </div>
+        </div>
+        
+
+        <!-- Main Content -->
+        <div class="col-md-10">
+            <div class="row">
+                <!-- Profile Header -->
+                <div class="col-12 mb-4">
+                    <div class="d-flex align-items-center gap-4">
+                        <div class="profile-image">
+                            {% if member.photo_url %}
+                            <img src="{{ member.photo_url }}" alt="{{ member.first_name }}" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
+                            {% else %}
+                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center" style="width: 150px; height: 150px;">
+                                <i class="bi bi-person-fill text-white" style="font-size: 4rem;"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h1 class="mb-2">{{ member.first_name }} {{ member.last_name }}</h1>
+                            <div class="d-flex gap-2">
+                                <div class="badge bg-secondary">Church Status: {{ member.status or 'None' }}</div>
+                                <div class="badge bg-primary">Breeze ID: {{ member.breeze_id }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Information -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Main</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="text-muted small">Name</label>
+                                <p class="mb-2">{{ member.first_name }} {{ member.last_name }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small">Gender</label>
+                                <p class="mb-2">{{ member.gender or 'Not specified' }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small">Marital Status</label>
+                                <p class="mb-2">{{ member.marital_status or 'Not specified' }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small">Age</label>
+                                <p class="mb-2">{{ member.age or 'Not specified' }}</p>
+                            </div>
+                            <div>
+                                <label class="text-muted small">Church Status</label>
+                                <p class="mb-0">{{ member.church_status or 'Not specified' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Contact</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="text-muted small">Mobile</label>
+                                <p class="mb-2">{{ member.phone or 'Not provided' }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small">Email</label>
+                                <p class="mb-2">{{ member.email or 'Not provided' }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small">Address</label>
+                                <p class="mb-1">{{ member.address or 'Not provided' }}</p>
+                                {% if member.city or member.state or member.zip %}
+                                <p class="mb-0">
+                                    {{ member.city }}{% if member.city and member.state %}, {% endif %}
+                                    {{ member.state }} {{ member.zip }}
+                                </p>
+                                {% endif %}
+                            </div>
+                            {% if member.emergency_contact or member.emergency_phone %}
+                            <div>
+                                <label class="text-muted small">Emergency Contact</label>
+                                <p class="mb-1">{{ member.emergency_contact or 'Not provided' }}</p>
+                                <p class="mb-0">{{ member.emergency_phone or '' }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Education & Work -->
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Education & Work</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="text-muted small">Grade</label>
+                                <p class="mb-2">{{ member.grade or 'Not specified' }}</p>
+                            </div>
+                            <div>
+                                <label class="text-muted small">Employer</label>
+                                <p class="mb-0">{{ member.employer or 'Not specified' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Family Information -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Family</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="text-muted small">Family Role</label>
+                                <p class="mb-2">{{ member.family_role or 'Not specified' }}</p>
+                            </div>
+                            {% if member.spouse_name %}
+                            <div class="mb-3">
+                                <label class="text-muted small">Spouse</label>
+                                <p class="mb-2">{{ member.spouse_name }}</p>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <label class="text-muted small">Family ID</label>
+                                <p class="mb-0">{{ member.family_id or 'Not specified' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Church Data -->
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Church Data</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="text-muted small">Date of Baptism</label>
+                                <p class="mb-2">{{ member.baptism_date.strftime('%B %d, %Y') if member.baptism_date else 'Not specified' }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small">Membership Date</label>
+                                <p class="mb-2">{{ member.membership_date.strftime('%B %d, %Y') if member.membership_date else 'Not specified' }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small">Membership Status</label>
+                                <p class="mb-2">{{ member.membership_status or 'Not specified' }}</p>
+                            </div>
+                            <div class="mb-3">
+                                <label class="text-muted small">Small Group</label>
+                                <p class="mb-2">{{ member.small_group or 'Not specified' }}</p>
+                            </div>
+                            <div>
+                                <label class="text-muted small">Ministry Area</label>
+                                <p class="mb-0">{{ member.ministry_area or 'Not specified' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vision Builders -->
+                <div class="col-12 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Vision Builders</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="text-muted small">Viewed Intro</label>
+                                        <p class="mb-2">{{ 'Yes' if member.viewed_intro else 'Not completed' }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="text-muted small">Session 1</label>
+                                        <p class="mb-2">{{ 'Completed' if member.completed_vb_session_1 else 'Not completed' }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="text-muted small">Session 2</label>
+                                        <p class="mb-2">{{ 'Completed' if member.completed_vb_session_2 else 'Not completed' }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="mb-3">
+                                        <label class="text-muted small">Session 3</label>
+                                        <p class="mb-2">{{ 'Completed' if member.completed_vb_session_3 else 'Not completed' }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                </div>
+                </div>
+
+                {% if member.notes %}
+                <!-- Notes -->
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Notes</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-0">{{ member.notes }}</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function syncMember(memberId) {
+    fetch(`/admin/sync_member/${memberId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            location.reload();
+        } else {
+            alert('Error syncing member data');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error syncing member data');
+    });
+}
+</script>
+{% endblock %}
+
+{% block styles %}
+<style>
+.profile-image img {
+    border: 4px solid #fff;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+.card {
+    box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    border: none;
+    border-radius: 10px;
+}
+.card-header {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+.badge {
+    padding: 0.5em 1em;
+    font-weight: 500;
+}
+</style>
+{% endblock %}
